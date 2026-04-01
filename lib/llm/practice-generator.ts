@@ -66,9 +66,10 @@ export function buildPracticePrompts(input: GeneratePracticeInput): {
       systemPrompt: `You are an English tutor writing realistic conversational practice. ${commonRules}`,
       userPrompt: [
         `Current day: Day ${input.currentDayNumber}.`,
-        'Generate a realistic dialogue of 10 to 14 lines in a daily-life situation.',
+        'Generate a realistic dialogue of 14 to 18 lines in a daily-life situation.',
         'Use this strict format for every line: A: ... or B: ...',
         'Keep each line concise and natural.',
+        'Every line must include at least one current-day vocabulary word so each line can be used for fill-in-the-blank practice.',
         'Current-day vocabulary:',
         currentDayBlock || '- none',
         '',

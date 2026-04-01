@@ -26,11 +26,34 @@ const mockResponses: Record<string, string[]> = {
     'The verbose keynote speaker managed to vindicate his complex theories. The vivacious audience\'s voracious questions kept him engaged, though some remained wary of his conclusions.',
   ],
   dialogue: [
-    '"That was quite serendipitous," she said, describing the ephemeral moment. He replied with a pragmatic observation, his eloquent voice gentle. "You\'re never taciturn about important matters," she countered.',
-    '"This situation seems ambiguous," he noted. "The benevolent approach would be candid communication," she suggested with diligent effort. His ebullient agreement made the conversation delightful.',
-    '"Your fastidious attention to detail is admirable," he observed. "And your garrulous commentary is a harbinger of great discussion," she replied with incisive wit. Their jocular exchange continued for hours.',
-    '"The sagacious approach," he began, "avoids a sedentary response." "Serendipitous timing," she noted, "but your surreptitious methods miss ubiquitous concerns." He conceded her point thoughtfully.',
-    '"Your verbose explanation demands vindication," she said. "The vivacious debate sparked voracious interest," he countered. Though still wary, they found agreement in the end.',
+    `A: That was a serendipitous meeting at the coffee shop this morning.
+B: I agree, and the conversation felt surprisingly eloquent from the start.
+A: Your pragmatic plan helped us decide quickly.
+B: Thanks, but your candid feedback was just as helpful.
+A: I liked how diligent you were with the schedule.
+B: You were ebullient when the manager approved the idea.
+A: The instructions were a little ambiguous at first.
+B: True, but your incisive questions made everything clear.
+A: Your jocular comment made the whole team laugh.
+B: Even our taciturn colleague joined the discussion.
+A: That benevolent attitude made the meeting easier.
+B: Your fastidious notes will help us tomorrow.
+A: The atmosphere stayed vivacious until the end.
+B: Yes, and now we are ready for the next task.`,
+    `A: The library was quiet, but our study plan felt practical.
+B: Your sagacious suggestion saved us a lot of time.
+A: I tried to avoid a sedentary afternoon, so we walked first.
+B: That walk gave me a ubiquitous example for my essay.
+A: Your surreptitious joke surprised me in the hallway.
+B: I knew your garrulous mood would return after a short break.
+A: The teacher gave a verbose explanation about the project.
+B: Still, your concise summary helped me understand it.
+A: I wanted to vindicate my first draft with better evidence.
+B: Your voracious reading made that part easy.
+A: The final paragraph sounded more confident and clear.
+B: I was wary at first, but now I think it is strong.
+A: We should review once more before submission.
+B: Great idea, and then we can relax for the evening.`,
   ],
   writing: [
     'I witnessed a serendipitous moment when an ephemeral butterfly landed on my pragmatic garden design. The eloquent colors contrasted with my usually taciturn surroundings.',

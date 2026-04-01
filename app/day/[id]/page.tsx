@@ -3,12 +3,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { getDayWords } from '@/lib/db/mock';
+import { deleteWord, getDayWords } from '@/lib/db/mock';
 import { Word } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import WordList from '@/components/word-list';
 import AddWordDialog from '@/components/add-word-dialog';
 import AddWordsDialog from '@/components/add-words-dialog';
+import EditWordDialog from '@/components/edit-word-dialog';
 import {
   ArrowLeft,
   Layers,
@@ -41,6 +42,7 @@ export default function DayPage() {
   const [showAddWord, setShowAddWord] = useState(false);
   const [showAddWords, setShowAddWords] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [editingWord, setEditingWord] = useState<Word | null>(null);
 
   useEffect(() => {
     async function loadWords() {
@@ -61,6 +63,26 @@ export default function DayPage() {
     const matched = dayId.match(/day_(\d+)/);
     return matched ? Number(matched[1]) : null;
   }, [dayId]);
+
+  const handleDeleteWord = async (wordToDelete: Word) => {
+    const shouldDelete = window.confirm(
+      `Delete "${wordToDelete.word}" from this day?`
+    );
+
+    if (!shouldDelete) return;
+
+    try {
+      await deleteWord(wordToDelete.id);
+      setWords((currentWords) =>
+        currentWords.filter((word) => word.id !== wordToDelete.id)
+      );
+      setEditingWord((current) =>
+        current?.id === wordToDelete.id ? null : current
+      );
+    } catch (error) {
+      console.error('[v0] Failed to delete word:', error);
+    }
+  };
 
   if (loading) {
     return (
@@ -157,7 +179,11 @@ export default function DayPage() {
           </section>
         )}
 
-        <WordList words={words} />
+        <WordList
+          words={words}
+          onEditWord={(word) => setEditingWord(word)}
+          onDeleteWord={handleDeleteWord}
+        />
       </main>
 
       <AddWordDialog
@@ -175,6 +201,19 @@ export default function DayPage() {
         onClose={() => setShowAddWords(false)}
         onWordsAdded={(newWords) => {
           setWords((currentWords) => [...currentWords, ...newWords]);
+        }}
+      />
+
+      <EditWordDialog
+        word={editingWord}
+        isOpen={Boolean(editingWord)}
+        onClose={() => setEditingWord(null)}
+        onWordUpdated={(updatedWord) => {
+          setWords((currentWords) =>
+            currentWords.map((word) =>
+              word.id === updatedWord.id ? updatedWord : word
+            )
+          );
         }}
       />
     </div>

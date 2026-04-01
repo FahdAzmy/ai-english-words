@@ -6,6 +6,8 @@ type DBAction =
   | 'getDayWords'
   | 'createDay'
   | 'createWord'
+  | 'updateWord'
+  | 'deleteWord'
   | 'updateWordUsage';
 
 interface DBApiResponse<T> {
@@ -58,6 +60,19 @@ export async function createWord(
   sentence?: string
 ): Promise<Word> {
   return callDb<Word>('createWord', { dayId, word, definition, sentence });
+}
+
+export async function updateWord(
+  wordId: string,
+  word: string,
+  definition: string,
+  sentence?: string
+): Promise<Word> {
+  return callDb<Word>('updateWord', { wordId, word, definition, sentence });
+}
+
+export async function deleteWord(wordId: string): Promise<boolean> {
+  return callDb<boolean>('deleteWord', { wordId });
 }
 
 export async function updateWordUsage(wordId: string): Promise<Word | null> {

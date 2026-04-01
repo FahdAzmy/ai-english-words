@@ -141,6 +141,76 @@ export async function createWordRepo(
   return newWord;
 }
 
+export async function updateWordRepo(
+  wordId: string,
+  word: string,
+  definition: string,
+  exampleSentence?: string
+): Promise<Word | null> {
+  await ensureIndexes();
+  const db = await getDb();
+  const wordsCollection = db.collection<WordDocument>('words');
+  const daysCollection = db.collection<DayDocument>('days');
+
+  const current = await wordsCollection.findOne(
+    { id: wordId },
+    { projection: { _id: 0 } }
+  );
+
+  if (!current) return null;
+
+  const nextSentence = exampleSentence?.trim() ? exampleSentence.trim() : null;
+
+  await wordsCollection.updateOne(
+    { id: wordId },
+    {
+      $set: {
+        word,
+        definition,
+        example_sentence: nextSentence,
+      },
+    }
+  );
+
+  await daysCollection.updateOne(
+    { id: current.day_id },
+    { $set: { updated_at: nowIso() } }
+  );
+
+  return {
+    ...current,
+    word,
+    definition,
+    example_sentence: nextSentence,
+  };
+}
+
+export async function deleteWordRepo(wordId: string): Promise<boolean> {
+  await ensureIndexes();
+  const db = await getDb();
+  const wordsCollection = db.collection<WordDocument>('words');
+  const daysCollection = db.collection<DayDocument>('days');
+
+  const current = await wordsCollection.findOne(
+    { id: wordId },
+    { projection: { _id: 0 } }
+  );
+
+  if (!current) return false;
+
+  const result = await wordsCollection.deleteOne({ id: wordId });
+
+  if (result.deletedCount > 0) {
+    await daysCollection.updateOne(
+      { id: current.day_id },
+      { $set: { updated_at: nowIso() } }
+    );
+    return true;
+  }
+
+  return false;
+}
+
 export async function updateWordUsageRepo(wordId: string): Promise<Word | null> {
   await ensureIndexes();
   const db = await getDb();

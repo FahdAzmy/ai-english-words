@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import {
   createDayRepo,
   createWordRepo,
+  deleteWordRepo,
   getCurrentUserRepo,
   getDayWordsRepo,
   getUserDaysRepo,
+  updateWordRepo,
   updateWordUsageRepo,
 } from '@/lib/db/repository';
 
@@ -16,6 +18,8 @@ type DBAction =
   | 'getDayWords'
   | 'createDay'
   | 'createWord'
+  | 'updateWord'
+  | 'deleteWord'
   | 'updateWordUsage';
 
 interface DBRequestBody {
@@ -83,6 +87,39 @@ export async function POST(request: Request) {
         }
         const data = await createWordRepo(dayId, word, definition, sentence);
         return NextResponse.json({ data });
+      }
+
+      case 'updateWord': {
+        const wordId = String(payload.wordId || '');
+        const word = String(payload.word || '').trim();
+        const definition = String(payload.definition || '').trim();
+        const sentence = String(payload.sentence || '').trim();
+
+        if (!wordId || !word || !definition) {
+          return NextResponse.json(
+            { error: 'Missing wordId/word/definition.' },
+            { status: 400 }
+          );
+        }
+
+        const data = await updateWordRepo(wordId, word, definition, sentence);
+        if (!data) {
+          return NextResponse.json({ error: 'Word not found.' }, { status: 404 });
+        }
+        return NextResponse.json({ data });
+      }
+
+      case 'deleteWord': {
+        const wordId = String(payload.wordId || '');
+        if (!wordId) {
+          return NextResponse.json({ error: 'Missing wordId.' }, { status: 400 });
+        }
+
+        const deleted = await deleteWordRepo(wordId);
+        if (!deleted) {
+          return NextResponse.json({ error: 'Word not found.' }, { status: 404 });
+        }
+        return NextResponse.json({ data: deleted });
       }
 
       case 'updateWordUsage': {

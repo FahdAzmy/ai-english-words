@@ -59,6 +59,11 @@ export default function WordList({ words, onEditWord, onDeleteWord }: WordListPr
                   <p className="mt-4 line-clamp-2 text-center text-2xl font-black tracking-tight text-foreground">
                     {word.word}
                   </p>
+                  {word.example_sentence && (
+                    <p className="mt-3 line-clamp-3 px-2 text-center text-xs text-muted-foreground sm:text-sm">
+                      {word.example_sentence}
+                    </p>
+                  )}
                   <p className="mt-4 text-xs font-medium text-muted-foreground">Click to show translation</p>
                 </div>
 
@@ -69,11 +74,6 @@ export default function WordList({ words, onEditWord, onDeleteWord }: WordListPr
                   <p className="mt-4 line-clamp-2 text-center text-2xl font-black tracking-tight text-foreground">
                     {word.definition}
                   </p>
-                  {word.example_sentence && (
-                    <p className="mt-3 line-clamp-3 px-2 text-center text-xs text-muted-foreground sm:text-sm">
-                      {word.example_sentence}
-                    </p>
-                  )}
                   <p className="mt-4 text-xs font-medium text-muted-foreground">Click to flip back</p>
                 </div>
               </div>

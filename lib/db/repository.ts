@@ -1,0 +1,174 @@
+import 'server-only';
+import { randomUUID } from 'crypto';
+import { type Day, type User, type Word } from '@/lib/types';
+import { getDb } from '@/lib/db/mongodb';
+
+interface UserDocument extends User {
+  _id?: unknown;
+}
+
+interface DayDocument extends Day {
+  _id?: unknown;
+}
+
+interface WordDocument extends Word {
+  _id?: unknown;
+}
+
+let indexesReady = false;
+
+async function ensureIndexes() {
+  if (indexesReady) return;
+
+  const db = await getDb();
+  await Promise.all([
+    db.collection<UserDocument>('users').createIndex({ id: 1 }, { unique: true }),
+    db.collection<DayDocument>('days').createIndex({ id: 1 }, { unique: true }),
+    db.collection<DayDocument>('days').createIndex({ user_id: 1, day_number: 1 }),
+    db.collection<WordDocument>('words').createIndex({ id: 1 }, { unique: true }),
+    db.collection<WordDocument>('words').createIndex({ day_id: 1 }),
+  ]);
+
+  indexesReady = true;
+}
+
+function nowIso(): string {
+  return new Date().toISOString();
+}
+
+function generateId(prefix: 'day' | 'word', dayNumber?: number): string {
+  const ts = Date.now();
+  const suffix = randomUUID().slice(0, 8);
+  if (prefix === 'day' && typeof dayNumber === 'number') {
+    return `day_${dayNumber}_${ts}_${suffix}`;
+  }
+  return `${prefix}_${ts}_${suffix}`;
+}
+
+export async function getCurrentUserRepo(): Promise<User | null> {
+  await ensureIndexes();
+  const db = await getDb();
+  const users = db.collection<UserDocument>('users');
+
+  const userId = process.env.DEFAULT_USER_ID || 'user_1';
+  const userEmail = process.env.DEFAULT_USER_EMAIL || 'learner@example.com';
+
+  await users.updateOne(
+    { id: userId },
+    {
+      $setOnInsert: {
+        id: userId,
+        email: userEmail,
+        created_at: nowIso(),
+      },
+    },
+    { upsert: true }
+  );
+
+  const user = await users.findOne({ id: userId }, { projection: { _id: 0 } });
+  return user || null;
+}
+
+export async function getUserDaysRepo(userId: string): Promise<Day[]> {
+  await ensureIndexes();
+  const db = await getDb();
+  const days = await db
+    .collection<DayDocument>('days')
+    .find({ user_id: userId }, { projection: { _id: 0 } })
+    .sort({ day_number: 1 })
+    .toArray();
+
+  return days;
+}
+
+export async function getDayWordsRepo(dayId: string): Promise<Word[]> {
+  await ensureIndexes();
+  const db = await getDb();
+  const words = await db
+    .collection<WordDocument>('words')
+    .find({ day_id: dayId }, { projection: { _id: 0 } })
+    .sort({ created_at: 1 })
+    .toArray();
+
+  return words;
+}
+
+export async function createDayRepo(userId: string, dayNumber: number): Promise<Day> {
+  await ensureIndexes();
+  const db = await getDb();
+  const daysCollection = db.collection<DayDocument>('days');
+
+  const day: Day = {
+    id: generateId('day', dayNumber),
+    user_id: userId,
+    day_number: dayNumber,
+    created_at: nowIso(),
+    updated_at: nowIso(),
+  };
+
+  await daysCollection.insertOne(day);
+  return day;
+}
+
+export async function createWordRepo(
+  dayId: string,
+  word: string,
+  definition: string,
+  exampleSentence?: string
+): Promise<Word> {
+  await ensureIndexes();
+  const db = await getDb();
+  const wordsCollection = db.collection<WordDocument>('words');
+  const daysCollection = db.collection<DayDocument>('days');
+
+  const newWord: Word = {
+    id: generateId('word'),
+    day_id: dayId,
+    word,
+    definition,
+    example_sentence: exampleSentence?.trim() ? exampleSentence.trim() : null,
+    times_used: 0,
+    last_used_at: null,
+    created_at: nowIso(),
+  };
+
+  await wordsCollection.insertOne(newWord);
+  await daysCollection.updateOne(
+    { id: dayId },
+    { $set: { updated_at: nowIso() } }
+  );
+
+  return newWord;
+}
+
+export async function updateWordUsageRepo(wordId: string): Promise<Word | null> {
+  await ensureIndexes();
+  const db = await getDb();
+  const wordsCollection = db.collection<WordDocument>('words');
+
+  const current = await wordsCollection.findOne(
+    { id: wordId },
+    { projection: { _id: 0 } }
+  );
+
+  if (!current) return null;
+
+  const nextUsage = (current.times_used || 0) + 1;
+  const nextLastUsed = nowIso();
+
+  await wordsCollection.updateOne(
+    { id: wordId },
+    {
+      $set: {
+        times_used: nextUsage,
+        last_used_at: nextLastUsed,
+      },
+    }
+  );
+
+  return {
+    ...current,
+    times_used: nextUsage,
+    last_used_at: nextLastUsed,
+  };
+}

@@ -1,6 +1,6 @@
 import 'server-only';
 import { randomUUID } from 'crypto';
-import { type Day, type Music, type User, type Word } from '@/lib/types';
+import { type Day, type Music, type SpeakingAttempt, type User, type Word } from '@/lib/types';
 import { getDb } from '@/lib/db/mongodb';
 
 interface UserDocument extends User {
@@ -19,6 +19,10 @@ interface MusicDocument extends Music {
   _id?: unknown;
 }
 
+interface SpeakingAttemptDocument extends SpeakingAttempt {
+  _id?: unknown;
+}
+
 let indexesReady = false;
 
 async function ensureIndexes() {
@@ -33,6 +37,8 @@ async function ensureIndexes() {
     db.collection<WordDocument>('words').createIndex({ day_id: 1 }),
     db.collection<MusicDocument>('music').createIndex({ id: 1 }, { unique: true }),
     db.collection<MusicDocument>('music').createIndex({ day_id: 1, created_at: -1 }),
+    db.collection<SpeakingAttemptDocument>('speaking_attempts').createIndex({ id: 1 }, { unique: true }),
+    db.collection<SpeakingAttemptDocument>('speaking_attempts').createIndex({ day_id: 1, created_at: -1 }),
   ]);
 
   indexesReady = true;
@@ -42,7 +48,7 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function generateId(prefix: 'day' | 'word' | 'music', dayNumber?: number): string {
+function generateId(prefix: 'day' | 'word' | 'music' | 'speaking', dayNumber?: number): string {
   const ts = Date.now();
   const suffix = randomUUID().slice(0, 8);
   if (prefix === 'day' && typeof dayNumber === 'number') {
@@ -286,4 +292,49 @@ export async function createDayMusicRepo(
 
   await musicCollection.insertOne(music);
   return music;
+}
+
+export async function getLatestSpeakingAttemptRepo(dayId: string): Promise<SpeakingAttempt | null> {
+  await ensureIndexes();
+  const db = await getDb();
+
+  const attempts = await db
+    .collection<SpeakingAttemptDocument>('speaking_attempts')
+    .find({ day_id: dayId }, { projection: { _id: 0 } })
+    .sort({ created_at: -1 })
+    .limit(1)
+    .toArray();
+
+  return attempts[0] || null;
+}
+
+export async function createSpeakingAttemptRepo(
+  dayId: string,
+  transcript: string,
+  wordsUsed: string[],
+  requiredWords: string[],
+  coveragePercent: number,
+  feedback: string,
+  durationSeconds?: number | null,
+  wordsPerMinute?: number | null
+): Promise<SpeakingAttempt> {
+  await ensureIndexes();
+  const db = await getDb();
+  const attemptsCollection = db.collection<SpeakingAttemptDocument>('speaking_attempts');
+
+  const attempt: SpeakingAttempt = {
+    id: generateId('speaking'),
+    day_id: dayId,
+    transcript,
+    duration_seconds: typeof durationSeconds === 'number' ? durationSeconds : null,
+    words_used: wordsUsed,
+    required_words: requiredWords,
+    coverage_percent: Number.isFinite(coveragePercent) ? coveragePercent : 0,
+    words_per_minute: typeof wordsPerMinute === 'number' ? wordsPerMinute : null,
+    feedback,
+    created_at: nowIso(),
+  };
+
+  await attemptsCollection.insertOne(attempt);
+  return attempt;
 }

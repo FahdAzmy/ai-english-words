@@ -28,7 +28,7 @@ export interface Word {
 export interface Practice {
   id: string;
   day_id: string;
-  type: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music';
+  type: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music' | 'speaking';
   response: string;
   words_used: string[];
   created_at: string;
@@ -41,6 +41,19 @@ export interface Music {
   words_used: string[];
   provider: string | null;
   model: string | null;
+  created_at: string;
+}
+
+export interface SpeakingAttempt {
+  id: string;
+  day_id: string;
+  transcript: string;
+  duration_seconds: number | null;
+  words_used: string[];
+  required_words: string[];
+  coverage_percent: number;
+  words_per_minute: number | null;
+  feedback: string;
   created_at: string;
 }
 

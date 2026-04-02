@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import {
+  createSpeakingAttemptRepo,
   createDayMusicRepo,
   createDayRepo,
   createWordRepo,
@@ -7,6 +8,7 @@ import {
   getCurrentUserRepo,
   getDayWordsRepo,
   getLatestDayMusicRepo,
+  getLatestSpeakingAttemptRepo,
   getUserDaysRepo,
   updateWordRepo,
   updateWordUsageRepo,
@@ -24,7 +26,9 @@ type DBAction =
   | 'deleteWord'
   | 'updateWordUsage'
   | 'getDayMusic'
-  | 'createDayMusic';
+  | 'createDayMusic'
+  | 'getSpeakingAttempt'
+  | 'createSpeakingAttempt';
 
 interface DBRequestBody {
   action: DBAction;
@@ -166,6 +170,57 @@ export async function POST(request: Request) {
           wordsUsed,
           provider,
           model
+        );
+        return NextResponse.json({ data });
+      }
+
+      case 'getSpeakingAttempt': {
+        const dayId = String(payload.dayId || '');
+        if (!dayId) {
+          return NextResponse.json({ error: 'Missing dayId.' }, { status: 400 });
+        }
+        const data = await getLatestSpeakingAttemptRepo(dayId);
+        return NextResponse.json({ data });
+      }
+
+      case 'createSpeakingAttempt': {
+        const dayId = String(payload.dayId || '');
+        const transcript = String(payload.transcript || '').trim();
+        const wordsUsed = Array.isArray(payload.wordsUsed)
+          ? payload.wordsUsed.map((word) => String(word).trim()).filter(Boolean)
+          : [];
+        const requiredWords = Array.isArray(payload.requiredWords)
+          ? payload.requiredWords.map((word) => String(word).trim()).filter(Boolean)
+          : [];
+        const coveragePercent = Number(payload.coveragePercent);
+        const feedback = String(payload.feedback || '').trim();
+        const durationSecondsRaw = payload.durationSeconds;
+        const wordsPerMinuteRaw = payload.wordsPerMinute;
+        const durationSeconds =
+          typeof durationSecondsRaw === 'number' && Number.isFinite(durationSecondsRaw)
+            ? durationSecondsRaw
+            : null;
+        const wordsPerMinute =
+          typeof wordsPerMinuteRaw === 'number' && Number.isFinite(wordsPerMinuteRaw)
+            ? wordsPerMinuteRaw
+            : null;
+
+        if (!dayId || !transcript) {
+          return NextResponse.json(
+            { error: 'Missing dayId/transcript.' },
+            { status: 400 }
+          );
+        }
+
+        const data = await createSpeakingAttemptRepo(
+          dayId,
+          transcript,
+          wordsUsed,
+          requiredWords,
+          Number.isFinite(coveragePercent) ? coveragePercent : 0,
+          feedback,
+          durationSeconds,
+          wordsPerMinute
         );
         return NextResponse.json({ data });
       }

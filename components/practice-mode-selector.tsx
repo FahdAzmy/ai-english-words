@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 interface PracticeModeSelectorProps {
   dayId: string;
   words: Word[];
-  suggestedMode: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music';
+  suggestedMode: 'story' | 'sentences' | 'dialogue' | 'writing' | 'speaking' | 'music';
 }
 
 const practiceModes = [
@@ -52,6 +52,14 @@ const practiceModes = [
     description: 'Turn your day words into a catchy song and use repetition to remember vocabulary faster.',
     icon: 'MU',
     color: 'from-indigo-500 to-blue-500',
+    difficulty: 'All Levels',
+  },
+  {
+    id: 'speaking',
+    name: 'Speking Agent Live',
+    description: 'Speak live with a Deepgram voice agent that replies in real time and coaches your word usage.',
+    icon: 'SP',
+    color: 'from-teal-500 to-cyan-500',
     difficulty: 'All Levels',
   },
 ];

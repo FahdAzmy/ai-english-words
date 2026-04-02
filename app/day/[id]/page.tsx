@@ -15,6 +15,7 @@ import {
   Layers,
   ListPlus,
   MessageSquareText,
+  Music2,
   PenLine,
   Plus,
   ScrollText,
@@ -23,7 +24,7 @@ import {
 } from 'lucide-react';
 
 const practiceModes: Array<{
-  id: 'story' | 'sentences' | 'dialogue' | 'writing';
+  id: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music';
   label: string;
   icon: LucideIcon;
 }> = [
@@ -31,6 +32,7 @@ const practiceModes: Array<{
   { id: 'sentences', label: 'Daily Sentences', icon: MessageSquareText },
   { id: 'dialogue', label: 'Interactive Dialogue', icon: Layers },
   { id: 'writing', label: 'Writing Practice', icon: PenLine },
+  { id: 'music', label: 'Music Practice', icon: Music2 },
 ];
 
 export default function DayPage() {
@@ -163,7 +165,7 @@ export default function DayPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
               {practiceModes.map((mode) => {
                 const Icon = mode.icon;
                 return (

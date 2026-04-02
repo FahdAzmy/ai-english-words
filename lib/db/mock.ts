@@ -1,4 +1,4 @@
-﻿import { Day, User, Word } from '@/lib/types';
+import { Day, Music, User, Word } from '@/lib/types';
 
 type DBAction =
   | 'getCurrentUser'
@@ -8,7 +8,9 @@ type DBAction =
   | 'createWord'
   | 'updateWord'
   | 'deleteWord'
-  | 'updateWordUsage';
+  | 'updateWordUsage'
+  | 'getDayMusic'
+  | 'createDayMusic';
 
 interface DBApiResponse<T> {
   data?: T;
@@ -77,4 +79,24 @@ export async function deleteWord(wordId: string): Promise<boolean> {
 
 export async function updateWordUsage(wordId: string): Promise<Word | null> {
   return callDb<Word | null>('updateWordUsage', { wordId });
+}
+
+export async function getDayMusic(dayId: string): Promise<Music | null> {
+  return callDb<Music | null>('getDayMusic', { dayId });
+}
+
+export async function createDayMusic(
+  dayId: string,
+  lyrics: string,
+  wordsUsed: string[],
+  provider?: string,
+  model?: string
+): Promise<Music> {
+  return callDb<Music>('createDayMusic', {
+    dayId,
+    lyrics,
+    wordsUsed,
+    provider,
+    model,
+  });
 }

@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import {
+  createDayMusicRepo,
   createDayRepo,
   createWordRepo,
   deleteWordRepo,
   getCurrentUserRepo,
   getDayWordsRepo,
+  getLatestDayMusicRepo,
   getUserDaysRepo,
   updateWordRepo,
   updateWordUsageRepo,
@@ -20,7 +22,9 @@ type DBAction =
   | 'createWord'
   | 'updateWord'
   | 'deleteWord'
-  | 'updateWordUsage';
+  | 'updateWordUsage'
+  | 'getDayMusic'
+  | 'createDayMusic';
 
 interface DBRequestBody {
   action: DBAction;
@@ -128,6 +132,41 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Missing wordId.' }, { status: 400 });
         }
         const data = await updateWordUsageRepo(wordId);
+        return NextResponse.json({ data });
+      }
+
+      case 'getDayMusic': {
+        const dayId = String(payload.dayId || '');
+        if (!dayId) {
+          return NextResponse.json({ error: 'Missing dayId.' }, { status: 400 });
+        }
+        const data = await getLatestDayMusicRepo(dayId);
+        return NextResponse.json({ data });
+      }
+
+      case 'createDayMusic': {
+        const dayId = String(payload.dayId || '');
+        const lyrics = String(payload.lyrics || '').trim();
+        const wordsUsed = Array.isArray(payload.wordsUsed)
+          ? payload.wordsUsed.map((word) => String(word).trim()).filter(Boolean)
+          : [];
+        const provider = String(payload.provider || '').trim();
+        const model = String(payload.model || '').trim();
+
+        if (!dayId || !lyrics) {
+          return NextResponse.json(
+            { error: 'Missing dayId/lyrics.' },
+            { status: 400 }
+          );
+        }
+
+        const data = await createDayMusicRepo(
+          dayId,
+          lyrics,
+          wordsUsed,
+          provider,
+          model
+        );
         return NextResponse.json({ data });
       }
 

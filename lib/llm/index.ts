@@ -62,10 +62,14 @@ B: Great idea, and then we can relax for the evening.`,
     'The sagacious decision to avoid sedentary work proved serendipitous. My surreptitious observations revealed ubiquitous inefficiencies we hadn\'t noticed before.',
     'My verbose journal entry attempted to vindicate my vivacious dreams. The voracious pursuit of excellence, though I remained cautiously wary, finally paid off.',
   ],
+  music: [
+    'Title: Morning Momentum\nVerse 1: I wake up early with a focused plan, I stay pragmatic and do the best I can.\nChorus: Keep moving, keep learning, let the new words flow, every small step helps my English grow.\nVerse 2: A benevolent friend gives candid advice, with diligent effort I improve day by day.\nChorus: Keep moving, keep learning, let the new words flow, every small step helps my English grow.',
+    'Title: One More Try\nVerse 1: Today felt ambiguous, but I did not hide, I asked clear questions and put fear aside.\nChorus: One more try, one more line, use the words and take your time.\nVerse 2: I stayed fastidious with every note I wrote, and an ebullient smile helped me find my voice.\nChorus: One more try, one more line, use the words and take your time.',
+  ],
 };
 
 export async function generateLLMResponse(
-  type: 'story' | 'sentences' | 'dialogue' | 'writing',
+  type: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music',
   words: Word[],
   _prompt?: string
 ): Promise<LLMResponse> {

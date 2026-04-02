@@ -1,4 +1,4 @@
-export type PracticeMode = 'sentences' | 'dialogue' | 'writing';
+export type PracticeMode = 'sentences' | 'dialogue' | 'writing' | 'music';
 
 export interface PracticeVocabularyWord {
   word: string;
@@ -70,6 +70,32 @@ export function buildPracticePrompts(input: GeneratePracticeInput): {
         'Use this strict format for every line: A: ... or B: ...',
         'Keep each line concise and natural.',
         'Every line must include at least one current-day vocabulary word so each line can be used for fill-in-the-blank practice.',
+        'Current-day vocabulary:',
+        currentDayBlock || '- none',
+        '',
+        'Previous-day vocabulary to mix naturally when useful:',
+        previousDaysBlock || '- none',
+      ].join('\n'),
+    };
+  }
+
+  if (input.mode === 'music') {
+    return {
+      systemPrompt: `You are an English tutor and lyric writer. ${commonRules}`,
+      userPrompt: [
+        `Current day: Day ${input.currentDayNumber}.`,
+        'Create one long song lyric that helps the learner remember vocabulary.',
+        'Keep it simple, catchy, and daily-life focused.',
+        'Target length: 170 to 260 words.',
+        'Output in this exact section format:',
+        'Title: ...',
+        'Verse 1: ...',
+        'Chorus: ...',
+        'Verse 2: ...',
+        'Bridge: ...',
+        'Chorus: ...',
+        'Outro: ...',
+        'Use all current-day vocabulary at least once.',
         'Current-day vocabulary:',
         currentDayBlock || '- none',
         '',

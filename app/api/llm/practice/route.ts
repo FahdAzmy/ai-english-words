@@ -7,7 +7,7 @@ import {
 } from '@/lib/llm/practice-generator';
 import { generateTextWithConfiguredProvider } from '@/lib/llm/providers';
 
-const VALID_MODES: PracticeMode[] = ['sentences', 'dialogue', 'writing'];
+const VALID_MODES: PracticeMode[] = ['sentences', 'dialogue', 'writing', 'music'];
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     const mode = body.mode;
     if (!mode || !VALID_MODES.includes(mode)) {
       return NextResponse.json(
-        { error: 'Invalid request body. "mode" must be one of: sentences, dialogue, writing.' },
+        { error: 'Invalid request body. "mode" must be one of: sentences, dialogue, writing, music.' },
         { status: 400 }
       );
     }

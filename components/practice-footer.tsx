@@ -3,10 +3,10 @@ import { Button } from '@/components/ui/button';
 
 interface PracticeFooterProps {
   dayId: string;
-  currentMode: 'story' | 'sentences' | 'dialogue' | 'writing';
+  currentMode: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music';
 }
 
-const modes = ['story', 'sentences', 'dialogue', 'writing'];
+const modes = ['story', 'sentences', 'dialogue', 'writing', 'music'];
 
 export default function PracticeFooter({ dayId, currentMode }: PracticeFooterProps) {
   const currentIndex = modes.indexOf(currentMode);

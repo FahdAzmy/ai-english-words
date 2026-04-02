@@ -28,9 +28,19 @@ export interface Word {
 export interface Practice {
   id: string;
   day_id: string;
-  type: 'story' | 'sentences' | 'dialogue' | 'writing';
+  type: 'story' | 'sentences' | 'dialogue' | 'writing' | 'music';
   response: string;
   words_used: string[];
+  created_at: string;
+}
+
+export interface Music {
+  id: string;
+  day_id: string;
+  lyrics: string;
+  words_used: string[];
+  provider: string | null;
+  model: string | null;
   created_at: string;
 }
 

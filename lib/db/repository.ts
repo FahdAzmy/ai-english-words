@@ -1,6 +1,6 @@
 import 'server-only';
 import { randomUUID } from 'crypto';
-import { type Day, type User, type Word } from '@/lib/types';
+import { type Day, type Music, type User, type Word } from '@/lib/types';
 import { getDb } from '@/lib/db/mongodb';
 
 interface UserDocument extends User {
@@ -12,6 +12,10 @@ interface DayDocument extends Day {
 }
 
 interface WordDocument extends Word {
+  _id?: unknown;
+}
+
+interface MusicDocument extends Music {
   _id?: unknown;
 }
 
@@ -27,6 +31,8 @@ async function ensureIndexes() {
     db.collection<DayDocument>('days').createIndex({ user_id: 1, day_number: 1 }),
     db.collection<WordDocument>('words').createIndex({ id: 1 }, { unique: true }),
     db.collection<WordDocument>('words').createIndex({ day_id: 1 }),
+    db.collection<MusicDocument>('music').createIndex({ id: 1 }, { unique: true }),
+    db.collection<MusicDocument>('music').createIndex({ day_id: 1, created_at: -1 }),
   ]);
 
   indexesReady = true;
@@ -36,7 +42,7 @@ function nowIso(): string {
   return new Date().toISOString();
 }
 
-function generateId(prefix: 'day' | 'word', dayNumber?: number): string {
+function generateId(prefix: 'day' | 'word' | 'music', dayNumber?: number): string {
   const ts = Date.now();
   const suffix = randomUUID().slice(0, 8);
   if (prefix === 'day' && typeof dayNumber === 'number') {
@@ -241,4 +247,43 @@ export async function updateWordUsageRepo(wordId: string): Promise<Word | null> 
     times_used: nextUsage,
     last_used_at: nextLastUsed,
   };
+}
+
+export async function getLatestDayMusicRepo(dayId: string): Promise<Music | null> {
+  await ensureIndexes();
+  const db = await getDb();
+
+  const music = await db
+    .collection<MusicDocument>('music')
+    .find({ day_id: dayId }, { projection: { _id: 0 } })
+    .sort({ created_at: -1 })
+    .limit(1)
+    .toArray();
+
+  return music[0] || null;
+}
+
+export async function createDayMusicRepo(
+  dayId: string,
+  lyrics: string,
+  wordsUsed: string[],
+  provider?: string,
+  model?: string
+): Promise<Music> {
+  await ensureIndexes();
+  const db = await getDb();
+  const musicCollection = db.collection<MusicDocument>('music');
+
+  const music: Music = {
+    id: generateId('music'),
+    day_id: dayId,
+    lyrics,
+    words_used: wordsUsed,
+    provider: provider?.trim() || null,
+    model: model?.trim() || null,
+    created_at: nowIso(),
+  };
+
+  await musicCollection.insertOne(music);
+  return music;
 }

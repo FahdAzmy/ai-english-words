@@ -41,13 +41,14 @@ export function buildStoryPrompts(input: GenerateStoryInput): {
     'You are an expert English vocabulary tutor.',
     'Write a coherent and engaging story for language learners.',
     'Use clear B1-B2 level English unless a listed word is advanced.',
-    'Use each listed vocabulary word at least once, naturally in context.',
+    'Use every listed vocabulary word at least once, naturally in context.',
+    'Do not skip any vocabulary word.',
     'Do not output markdown or lists; output plain story text only.',
   ].join(' ');
 
   const userPrompt = [
     `Current day: Day ${input.currentDayNumber}.`,
-    'Generate one story between 180 and 260 words.',
+    'Generate one complete story with no fixed word-count limit.',
     'Vocabulary words from the current day (must all be included):',
     currentDayBlock || '- none',
     '',

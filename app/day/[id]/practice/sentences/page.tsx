@@ -111,18 +111,6 @@ export default function SentencesPracticePage() {
 
             <SentencesDisplay sentences={sentences} words={selectedWords} />
 
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h3 className="font-bold text-foreground mb-4">Vocabulary used in these sentences:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedWords.map((word) => (
-                  <div key={word.id} className="rounded bg-secondary/5 border border-secondary/20 p-4">
-                    <p className="font-semibold text-secondary">{word.word}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{word.definition}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {!completed && (
               <div className="rounded-lg border-2 border-primary bg-primary/5 p-6">
                 <h3 className="font-bold text-foreground mb-2">Ready to continue?</h3>

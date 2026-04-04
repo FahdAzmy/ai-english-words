@@ -221,16 +221,9 @@ async function generateWithOpenRouter(
 function generateWithMock(model: string, request: LLMRequest): LLMResult {
   const joinedPrompt = `${request.systemPrompt}\n${request.userPrompt}`;
   const words = extractCandidateWords(joinedPrompt);
-
-  const story = `At sunrise, ${words[0] || 'the learner'} opened a notebook and began a focused study session. ${
-    words[1] || 'Patience'
-  } guided each sentence, and ${
-    words[2] || 'discipline'
-  } helped connect new ideas with older lessons. By evening, ${
-    words[3] || 'confidence'
-  } replaced doubt, while ${
-    words[4] || 'progress'
-  } became visible in every paragraph.`;
+  const fallbackWords = ['the learner', 'confidence', 'practice'];
+  const wordsToUse = words.length > 0 ? words : fallbackWords;
+  const story = buildMockStoryWithAllWords(wordsToUse);
 
   return {
     text: story,
@@ -241,11 +234,28 @@ function generateWithMock(model: string, request: LLMRequest): LLMResult {
 
 function extractCandidateWords(input: string): string[] {
   const lines = input.split('\n');
-  const vocabulary = lines
+  const seen = new Set<string>();
+
+  return lines
     .map((line) => line.trim())
     .filter((line) => line.startsWith('- '))
     .map((line) => line.replace(/^- /, '').split(':')[0]?.trim())
-    .filter(Boolean);
+    .filter((word): word is string => Boolean(word))
+    .filter((word) => {
+      const normalized = word.toLowerCase();
+      if (seen.has(normalized)) return false;
+      seen.add(normalized);
+      return true;
+    });
+}
 
-  return vocabulary.slice(0, 5);
+function buildMockStoryWithAllWords(words: string[]): string {
+  const intro = `At sunrise, the learner opened a notebook and promised to use every target word in one meaningful story.`;
+  const sentences = words.map(
+    (word, index) =>
+      `In sentence ${index + 1}, ${word} appeared naturally as part of a clear example the learner could remember.`
+  );
+  const closing = `By evening, the full vocabulary list had been practiced in context, and the story felt complete.`;
+
+  return [intro, ...sentences, closing].join(' ');
 }

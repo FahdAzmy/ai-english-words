@@ -79,8 +79,13 @@ export async function generateLLMResponse(
   // const response = await callAnthropic(prompt);
 
   // For now, return mock response
-  const responses = mockResponses[type] || [];
-  const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+  const randomResponse =
+    type === 'story'
+      ? buildStoryFallbackFromWords(words)
+      : (() => {
+          const responses = mockResponses[type] || [];
+          return responses[Math.floor(Math.random() * responses.length)];
+        })();
 
   // Extract which words were used from the response
   const usedWords = words.filter((w) =>
@@ -92,6 +97,40 @@ export async function generateLLMResponse(
     wordsUsed: usedWords.map((w) => w.word),
     isValid: usedWords.length > 0,
   };
+}
+
+function buildStoryFallbackFromWords(words: Word[]): string {
+  const uniqueWords = dedupeWords(words);
+  if (uniqueWords.length === 0) {
+    return 'The learner opened a notebook and prepared to practice vocabulary in context.';
+  }
+
+  const intro =
+    'The learner decided to write one complete story that uses every vocabulary word from today and previous days.';
+  const body = uniqueWords.map(
+    (word, index) =>
+      `Sentence ${index + 1} used ${word} in a clear context so the meaning stayed easy to remember.`
+  );
+  const closing =
+    'By the end of the story, every target word had appeared naturally, and the learner felt ready for the next challenge.';
+
+  return [intro, ...body, closing].join(' ');
+}
+
+function dedupeWords(words: Word[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+
+  for (const item of words) {
+    const value = item.word?.trim();
+    if (!value) continue;
+    const key = value.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(value);
+  }
+
+  return unique;
 }
 
 export async function generateFeedback(

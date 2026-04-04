@@ -139,18 +139,6 @@ export default function StoryPracticePage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h3 className="font-bold text-foreground mb-4">Vocabulary in this story:</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {selectedWords.map((word) => (
-                  <div key={word.id} className="rounded bg-primary/5 border border-primary/20 p-4">
-                    <p className="font-semibold text-primary">{word.word}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{word.definition}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
             {!completed && (
               <div className="rounded-lg border-2 border-primary bg-primary/5 p-6">
                 <h3 className="font-bold text-foreground mb-2">Ready to continue?</h3>

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 interface PracticeModeSelectorProps {
   dayId: string;
   words: Word[];
-  suggestedMode: 'story' | 'sentences' | 'dialogue' | 'writing' | 'speaking' | 'music';
+  suggestedMode: 'story' | 'sentences' | 'sentence-exam' | 'dialogue' | 'writing' | 'speaking' | 'music';
 }
 
 const practiceModes = [
@@ -27,6 +27,15 @@ const practiceModes = [
       'Build meaningful sentences with your vocabulary words. Practice combining words in grammatically correct ways.',
     icon: 'SE',
     color: 'from-purple-500 to-pink-500',
+    difficulty: 'Intermediate',
+  },
+  {
+    id: 'sentence-exam',
+    name: 'Sentence Exam',
+    description:
+      'Write one sentence per word, check each sentence with AI, then get a full weak-points review for all sentences.',
+    icon: 'EX',
+    color: 'from-amber-500 to-orange-500',
     difficulty: 'Intermediate',
   },
   {

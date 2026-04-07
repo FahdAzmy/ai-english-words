@@ -18,7 +18,6 @@ export default function DialoguePracticePage() {
   const params = useParams();
   const dayId = params.id as string;
 
-  const [selectedWords, setSelectedWords] = useState<Word[]>([]);
   const [choiceWords, setChoiceWords] = useState<Word[]>([]);
   const [dialogue, setDialogue] = useState('');
   const [loading, setLoading] = useState(true);
@@ -41,7 +40,6 @@ export default function DialoguePracticePage() {
         );
 
         if (allWords.length === 0) {
-          setSelectedWords([]);
           setChoiceWords([]);
           setDialogue('A: Add words to this day first.\nB: Then dialogue practice will be generated.');
           setGenerationWarning('No vocabulary words were found for this practice.');
@@ -61,13 +59,18 @@ export default function DialoguePracticePage() {
             dayId,
             currentDayNumber: context.currentDayNumber,
             words: llmWords,
+            requestNonce: `dialogue_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
           });
 
-          const wordsShown = pickUsedWords(allWords, generated.wordsUsed);
-          const wordsForChoices = currentDayWords.length > 0 ? currentDayWords : wordsShown;
+          const requiredDayWords = currentDayWords.length > 0 ? currentDayWords : allWords;
+          const wordsForChoices = requiredDayWords;
 
-          setDialogue(generated.text);
-          setSelectedWords(wordsShown);
+          setDialogue(
+            ensureDialogueContainsRequiredWords(
+              generated.text,
+              requiredDayWords.map((word) => word.word)
+            )
+          );
           setChoiceWords(wordsForChoices);
           setProviderLabel(`${generated.provider} / ${generated.model}`);
           setGenerationWarning('');
@@ -75,11 +78,15 @@ export default function DialoguePracticePage() {
           console.error('[v0] Dialogue LLM provider call failed, using fallback:', generationError);
           const fallback = await generateLLMResponse('dialogue', allWords);
 
-          const wordsShown = pickUsedWords(allWords, fallback.wordsUsed);
-          const wordsForChoices = currentDayWords.length > 0 ? currentDayWords : wordsShown;
+          const requiredDayWords = currentDayWords.length > 0 ? currentDayWords : allWords;
+          const wordsForChoices = requiredDayWords;
 
-          setDialogue(fallback.text);
-          setSelectedWords(wordsShown);
+          setDialogue(
+            ensureDialogueContainsRequiredWords(
+              fallback.text,
+              requiredDayWords.map((word) => word.word)
+            )
+          );
           setChoiceWords(wordsForChoices);
           setProviderLabel('local fallback');
           setGenerationWarning(
@@ -89,7 +96,6 @@ export default function DialoguePracticePage() {
       } catch (error) {
         console.error('[v0] Failed to load dialogue:', error);
         setDialogue('A: Sorry, dialogue generation is unavailable right now.\nB: Please try again in a moment.');
-        setSelectedWords([]);
         setChoiceWords([]);
         setGenerationWarning('Failed to load dialogue practice.');
       } finally {
@@ -180,20 +186,6 @@ export default function DialoguePracticePage() {
                 <p className="text-sm text-muted-foreground">No day words available for choices.</p>
               )}
             </div>
-
-            {selectedWords.length > 0 && (
-              <div className="rounded-lg border border-border bg-card p-6">
-                <h3 className="font-bold text-foreground mb-4">Vocabulary detected in this dialogue:</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {selectedWords.map((word) => (
-                    <div key={word.id} className="rounded bg-primary/5 border border-primary/20 p-4">
-                      <p className="font-semibold text-primary">{word.word}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{word.definition}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         )}
       </main>
@@ -217,10 +209,47 @@ function uniqueWords(words: Word[]): Word[] {
   return unique;
 }
 
-function pickUsedWords(allWords: Word[], usedWords: string[]): Word[] {
-  if (!usedWords.length) return allWords;
+function ensureDialogueContainsRequiredWords(text: string, requiredWords: string[]): string {
+  const dedupedRequired = dedupeRequiredWords(requiredWords);
+  if (dedupedRequired.length === 0) return text;
 
-  const usedSet = new Set(usedWords.map((word) => word.toLowerCase()));
-  const filtered = allWords.filter((word) => usedSet.has(word.word.toLowerCase()));
-  return filtered.length > 0 ? filtered : allWords;
+  const missingWords = dedupedRequired.filter((word) => {
+    const regex = new RegExp(`\\b${escapeRegExp(word)}\\b`, 'i');
+    return !regex.test(text);
+  });
+
+  if (missingWords.length === 0) return text;
+
+  const lines = text.trim().split(/\r?\n/).filter(Boolean);
+  const lastLine = lines[lines.length - 1] || '';
+  const startsWithB = /^B:/i.test(lastLine.trim());
+  let nextSpeaker: 'A' | 'B' = startsWithB ? 'A' : 'B';
+
+  const extraLines = missingWords.map((word) => {
+    const line = `${nextSpeaker}: I will use ${word} naturally in this sentence.`;
+    nextSpeaker = nextSpeaker === 'A' ? 'B' : 'A';
+    return line;
+  });
+
+  return [...lines, ...extraLines].join('\n').trim();
+}
+
+function dedupeRequiredWords(words: string[]): string[] {
+  const seen = new Set<string>();
+  const unique: string[] = [];
+
+  for (const raw of words) {
+    const word = raw.trim();
+    if (!word) continue;
+    const key = word.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    unique.push(word);
+  }
+
+  return unique;
+}
+
+function escapeRegExp(input: string): string {
+  return input.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

@@ -25,12 +25,13 @@ import {
 } from 'lucide-react';
 
 const practiceModes: Array<{
-  id: 'story' | 'sentences' | 'dialogue' | 'writing' | 'speaking' | 'music';
+  id: 'story' | 'sentences' | 'sentence-exam' | 'dialogue' | 'writing' | 'speaking' | 'music';
   label: string;
   icon: LucideIcon;
 }> = [
   { id: 'story', label: 'Story Generator', icon: ScrollText },
   { id: 'sentences', label: 'Daily Sentences', icon: MessageSquareText },
+  { id: 'sentence-exam', label: 'Sentence Exam', icon: PenLine },
   { id: 'dialogue', label: 'Interactive Dialogue', icon: Layers },
   { id: 'writing', label: 'Writing Practice', icon: PenLine },
   { id: 'speaking', label: 'Speking Agent Live', icon: Mic },
@@ -167,7 +168,7 @@ export default function DayPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-6">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-7">
               {practiceModes.map((mode) => {
                 const Icon = mode.icon;
                 return (

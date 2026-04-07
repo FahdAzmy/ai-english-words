@@ -5,8 +5,8 @@ import { useParams } from 'next/navigation';
 import { Word } from '@/lib/types';
 import { updateWordUsage } from '@/lib/db/mock';
 import { generateLLMResponse } from '@/lib/llm';
-import { requestPracticeGeneration } from '@/lib/llm/client';
-import { type PracticeVocabularyWord } from '@/lib/llm/practice-generator';
+import { requestDailySentenceGeneration } from '@/lib/llm/client';
+import { type DailySentenceVocabularyWord } from '@/lib/llm/daily-sentence';
 import { buildPracticeWordContext } from '@/lib/services/practice-context';
 import PracticeHeader from '@/components/practice-header';
 import SentencesDisplay from '@/components/practice/sentences-display';
@@ -26,7 +26,9 @@ export default function SentencesPracticePage() {
   useEffect(() => {
     async function loadAndGenerate() {
       try {
-        const context = await buildPracticeWordContext(dayId, { previousWordsPerDay: 5 });
+        const context = await buildPracticeWordContext(dayId, {
+          previousWordsPerDay: Number.MAX_SAFE_INTEGER,
+        });
         const allWords = context.words;
 
         if (allWords.length === 0) {
@@ -36,7 +38,7 @@ export default function SentencesPracticePage() {
           return;
         }
 
-        const llmWords: PracticeVocabularyWord[] = context.entries.map((entry) => ({
+        const llmWords: DailySentenceVocabularyWord[] = context.entries.map((entry) => ({
           word: entry.word.word,
           definition: entry.word.definition,
           sourceDayNumber: entry.sourceDayNumber,
@@ -44,22 +46,22 @@ export default function SentencesPracticePage() {
         }));
 
         try {
-          const generated = await requestPracticeGeneration({
-            mode: 'sentences',
+          const generated = await requestDailySentenceGeneration({
             dayId,
             currentDayNumber: context.currentDayNumber,
             words: llmWords,
+            requestNonce: `daily_sentence_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
           });
 
           setSentences(parseSentences(generated.text));
-          setSelectedWords(pickUsedWords(allWords, generated.wordsUsed));
+          setSelectedWords(allWords);
           setProviderLabel(`${generated.provider} / ${generated.model}`);
           setGenerationWarning('');
         } catch (generationError) {
           console.error('[v0] Sentences LLM provider call failed, using fallback:', generationError);
           const fallback = await generateLLMResponse('sentences', allWords);
           setSentences(parseSentences(fallback.text));
-          setSelectedWords(pickUsedWords(allWords, fallback.wordsUsed));
+          setSelectedWords(allWords);
           setProviderLabel('local fallback');
           setGenerationWarning(
             'LLM provider was not reachable. Using local fallback sentences until provider env is configured.'
@@ -163,12 +165,4 @@ function parseSentences(text: string): string[] {
 
 function ensureSentenceEnding(sentence: string): string {
   return /[.!?]$/.test(sentence) ? sentence : `${sentence}.`;
-}
-
-function pickUsedWords(allWords: Word[], usedWords: string[]): Word[] {
-  if (!usedWords.length) return allWords;
-
-  const usedSet = new Set(usedWords.map((word) => word.toLowerCase()));
-  const filtered = allWords.filter((word) => usedSet.has(word.word.toLowerCase()));
-  return filtered.length > 0 ? filtered : allWords;
 }

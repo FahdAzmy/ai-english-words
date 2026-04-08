@@ -3,6 +3,7 @@ import { Day, Music, SpeakingAttempt, User, Word } from '@/lib/types';
 type DBAction =
   | 'getCurrentUser'
   | 'getUserDays'
+  | 'getUserWordsCount'
   | 'getDayWords'
   | 'createDay'
   | 'createWord'
@@ -47,6 +48,10 @@ export async function getCurrentUser(): Promise<User | null> {
 
 export async function getUserDays(userId: string): Promise<Day[]> {
   return callDb<Day[]>('getUserDays', { userId });
+}
+
+export async function getUserWordsCount(userId: string): Promise<number> {
+  return callDb<number>('getUserWordsCount', { userId });
 }
 
 export async function getDayWords(dayId: string): Promise<Word[]> {

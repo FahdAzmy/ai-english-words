@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createDay, getCurrentUser, getUserDays } from '@/lib/db/mock';
+import { createDay, getCurrentUser, getUserDays, getUserWordsCount } from '@/lib/db/mock';
 import { Day, User } from '@/lib/types';
 import DayCard from '@/components/day-card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [days, setDays] = useState<Day[]>([]);
+  const [totalWords, setTotalWords] = useState(0);
   const [loading, setLoading] = useState(true);
   const [addingDay, setAddingDay] = useState(false);
 
@@ -19,9 +20,13 @@ export default function Dashboard() {
         setUser(currentUser);
 
         if (currentUser) {
-          const userDays = await getUserDays(currentUser.id);
+          const [userDays, userWordsCount] = await Promise.all([
+            getUserDays(currentUser.id),
+            getUserWordsCount(currentUser.id),
+          ]);
           const sortedDays = userDays.sort((a, b) => a.day_number - b.day_number);
           setDays(sortedDays);
+          setTotalWords(userWordsCount);
         }
       } catch (error) {
         console.error('[v0] Failed to load data:', error);
@@ -63,7 +68,12 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div className="mb-8 flex items-center justify-between gap-4">
-          <h1 className="text-2xl font-bold text-foreground">Days</h1>
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Days</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Total words: {totalWords.toLocaleString('en-US')}
+            </p>
+          </div>
           <Button onClick={handleAddDay} disabled={!user || addingDay}>
             {addingDay ? 'Adding Day...' : 'Add Day'}
           </Button>

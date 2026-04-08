@@ -10,6 +10,7 @@ import {
   getLatestDayMusicRepo,
   getLatestSpeakingAttemptRepo,
   getUserDaysRepo,
+  getUserWordsCountRepo,
   updateWordRepo,
   updateWordUsageRepo,
 } from '@/lib/db/repository';
@@ -19,6 +20,7 @@ export const runtime = 'nodejs';
 type DBAction =
   | 'getCurrentUser'
   | 'getUserDays'
+  | 'getUserWordsCount'
   | 'getDayWords'
   | 'createDay'
   | 'createWord'
@@ -57,6 +59,15 @@ export async function POST(request: Request) {
           return NextResponse.json({ error: 'Missing userId.' }, { status: 400 });
         }
         const data = await getUserDaysRepo(userId);
+        return NextResponse.json({ data });
+      }
+
+      case 'getUserWordsCount': {
+        const userId = String(payload.userId || '');
+        if (!userId) {
+          return NextResponse.json({ error: 'Missing userId.' }, { status: 400 });
+        }
+        const data = await getUserWordsCountRepo(userId);
         return NextResponse.json({ data });
       }
 

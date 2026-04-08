@@ -93,6 +93,28 @@ export async function getUserDaysRepo(userId: string): Promise<Day[]> {
   return days;
 }
 
+export async function getUserWordsCountRepo(userId: string): Promise<number> {
+  await ensureIndexes();
+  const db = await getDb();
+
+  const dayIds = (
+    await db
+      .collection<DayDocument>('days')
+      .find({ user_id: userId }, { projection: { _id: 0, id: 1 } })
+      .toArray()
+  ).map((day) => day.id);
+
+  if (dayIds.length === 0) {
+    return 0;
+  }
+
+  const totalWords = await db
+    .collection<WordDocument>('words')
+    .countDocuments({ day_id: { $in: dayIds } });
+
+  return totalWords;
+}
+
 export async function getDayWordsRepo(dayId: string): Promise<Word[]> {
   await ensureIndexes();
   const db = await getDb();

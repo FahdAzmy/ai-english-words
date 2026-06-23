@@ -12,6 +12,8 @@ import AddWordsDialog from '@/components/add-words-dialog';
 import EditWordDialog from '@/components/edit-word-dialog';
 import {
   ArrowLeft,
+  Copy,
+  FileText,
   Layers,
   ListPlus,
   MessageSquareText,
@@ -23,6 +25,8 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react';
+import { toast } from 'sonner';
+import ImportPdfDialog from '@/components/import-pdf-dialog';
 
 const practiceModes: Array<{
   id: 'story' | 'sentences' | 'sentence-exam' | 'dialogue' | 'writing' | 'speaking' | 'music';
@@ -47,6 +51,7 @@ export default function DayPage() {
   const [showAddWord, setShowAddWord] = useState(false);
   const [showAddWords, setShowAddWords] = useState(false);
   const [showActions, setShowActions] = useState(false);
+  const [showImportPdf, setShowImportPdf] = useState(false);
   const [editingWord, setEditingWord] = useState<Word | null>(null);
 
   useEffect(() => {
@@ -68,6 +73,22 @@ export default function DayPage() {
     const matched = dayId.match(/day_(\d+)/);
     return matched ? Number(matched[1]) : null;
   }, [dayId]);
+
+  const handleCopyWords = async () => {
+    if (words.length === 0) {
+      toast.error('No words to copy');
+      return;
+    }
+
+    const text = words.map((w) => w.word).join('\n');
+
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success(`Copied ${words.length} words to clipboard`);
+    } catch {
+      toast.error('Failed to copy to clipboard');
+    }
+  };
 
   const handleDeleteWord = async (wordToDelete: Word) => {
     const shouldDelete = window.confirm(
@@ -150,6 +171,24 @@ export default function DayPage() {
 
             <Button
               variant="outline"
+              onClick={() => setShowImportPdf(true)}
+              className="h-11 rounded-xl border-primary/30 bg-primary/5 px-5 font-semibold"
+            >
+              <FileText className="mr-2 h-4 w-4" />
+              Import PDF
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={handleCopyWords}
+              className="h-11 rounded-xl border-primary/30 bg-primary/5 px-5 font-semibold"
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copy Words
+            </Button>
+
+            <Button
+              variant="outline"
               onClick={() => setShowActions((current) => !current)}
               className="h-11 rounded-xl border-primary/30 bg-primary/5 px-5 font-semibold"
             >
@@ -219,6 +258,15 @@ export default function DayPage() {
               word.id === updatedWord.id ? updatedWord : word
             )
           );
+        }}
+      />
+
+      <ImportPdfDialog
+        dayId={dayId}
+        isOpen={showImportPdf}
+        onClose={() => setShowImportPdf(false)}
+        onWordsAdded={(newWords) => {
+          setWords((currentWords) => [...currentWords, ...newWords]);
         }}
       />
     </div>
